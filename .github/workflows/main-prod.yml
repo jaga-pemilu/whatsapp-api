@@ -1,0 +1,53 @@
+name: Deployment Prod Whatsapp-api
+
+on:
+  push:
+    branches: 
+    - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout 
+      uses: actions/checkout@v2
+        
+    
+    - name: Log in to Huawei Cloud SWR
+      uses: huaweicloud/swr-login@v2.1.0
+      with:
+        region: ap-southeast-4
+        #region: cn-north-4
+        access-key-id: ${{ secrets.ACCESSKEY }}
+        access-key-secret: ${{ secrets.SECRETACCESSKEY }}
+    
+    # - name: Set up Docker Buildx
+    #   id: buildx
+    #   uses: docker/setup-buildx-action@v1
+
+    # - name: Build Docker to swr
+    #   uses: huaweicloud/swr-multiplatform-build-action@v1.2.0
+    #   env:
+    #     TAG_COMMIT: ${{ github.sha }}
+    #   with:
+    #     image_tag: swr.ap-southeast-4.myhuaweicloud.com/jaga-pemilu-production/whatsapp-web-api:$TAG_COMMIT
+    #     #image_tag: swr.ap-southeast-4.myhuaweicloud.com/jaga-pemilu-production/whatsapp-web-api:test
+    #     platforms: linux/amd64
+    #     use_latest_buildx: true
+    #     push: true
+    #     file: ./Dockerfile
+    - name: Docker login to swr
+      run: docker login -u ap-southeast-4@O4HHGAXWIPWAJRFJKCBO -p a7df73e9dd506aad3508ac741187dc1406604b5e1daf2e075517f5c9ee8bcca5 swr.ap-southeast-4.myhuaweicloud.com
+    - name: Docker Build to swr
+      env:
+        TAG_COMMIT: ${{ github.sha }}
+      run: docker build -t whatsapp-web-api:$TAG_COMMIT .
+    - name: Push tag to swr
+      env:
+        TAG_COMMIT: ${{ github.sha }}
+      run: docker tag whatsapp-web-api:$TAG_COMMIT swr.ap-southeast-4.myhuaweicloud.com/jaga-pemilu-production/whatsapp-web-api:$TAG_COMMIT
+    - name: Push Docker to swr
+      env:
+        TAG_COMMIT: ${{ github.sha }}
+      run: docker push swr.ap-southeast-4.myhuaweicloud.com/jaga-pemilu-production/whatsapp-web-api:$TAG_COMMIT
